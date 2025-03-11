@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "arvore.h"
+#include "item.h"
 
 
 struct no {
@@ -18,10 +19,12 @@ No* criaNo(int ordem, No* pai) {
     novoNo->nChaves = 0;
     novoNo->pai = pai;
     novoNo->chaves = malloc(2 * ordem * sizeof(int));
-    novoNo->filhos = malloc(( 2 * ordem + 1) * sizeof(No*));
+    novoNo->filhos = malloc(( 2 * ordem  + 1) * sizeof(No*));
 
+    // inicializa vetores
     for(int i=0; i<ordem; i++){
-
+        novoNo->chaves[i] = 0;
+        novoNo->filhos[i] = NULL;
     }
 
     return novoNo;
@@ -44,12 +47,34 @@ bool noContemChave(No* no, int chave) {
     return false;
 }
 
+bool noPossuiPai(No* no) {
+    return no->pai != NULL;
+}
+
 bool noCheio(No* no, int ordem) {
     return no->nChaves == ordem;
 }
 
+void insereNo(No* no, int chave, int ordem) {
+    if(no->nChaves == 0) {
+        no->chaves[0] = chave;
+        return;
+    }
+    else{
+        int i = no->nChaves - 1;
+        while(i >= 0 && chave < no->chaves[i]) {
+            no->chaves[i + 1] = no->chaves[i];
+            i--;
+        }
+        no->chaves[i + 1] = chave;
+    }
 
-void insereChave(No* raiz, void* chave) {
+    no->nChaves++;
+
+    return;
+}
+
+void insereArvore(No* raiz, void* chave, int ordem) {
     
     No* no = buscaChave(raiz, chave);
     
@@ -61,21 +86,62 @@ void insereChave(No* raiz, void* chave) {
 
     // se o nó não estiver cheio, insere a chave no nó
     if(!noCheio(no, ordem)) {
-        int i = no->nChaves - 1;
-        while(i >= 0 && chave < no->chaves[i]) {
-            no->chaves[i + 1] = no->chaves[i];
-            i--;
+        insereNo(no, chave, ordem);
+    } else {
+        // se o nó estiver cheio, divide o nó, sobe o do meio para o pai e cria outro nó
+        No* novoNo = criaNo(ordem, no->pai);
+        int vetorAux[ordem + 1];
+        int i;
+
+        // essa etapa é só para descobrir qual é a chave de valor intermediario que irá subir pro nó-pai
+        for(i=0; i<=ordem; i++) {
+            vetorAux[i] = no->chaves[i];
         }
-        no->chaves[i + 1] = chave;
-        no->nChaves++;
-    } 
+        vetorAux[i+1] = chave; // insere a chave no vetor auxiliar
+        sort(vetorAux, 0, ordem); // insertion sort para ordenar o vetor auxiliar
 
-    // se o nó estiver cheio, divide o nó, sobe o do meio para o pai e cria outro no 
-    // as d primeiras chaves ficam no nó original, a chave d+1 sobe para o pai, na nova pagina ficam as restantes
- 
+        int indiceDoMeio = ordem/2;
+        int chaveDoMeio = vetorAux[indiceDoMeio] ;
+
+        // as d primeiras chaves ficam no nó original, a chave d+1 sobe para o pai, na nova página ficam as restantes
+        // atualiza a primeira metade do nó com os valores certos
+        for(i=0; i<indiceDoMeio; i++) {
+            no->chaves[i] = vetorAux[i];
+        }
+        for(i=indiceDoMeio; i<=ordem;i++){
+            no->chaves[i] = -1;
+        }
+
+        // atualiza o novo nó com os novos valores
+        for(i=indiceDoMeio+1; i<=ordem; i++) {
+            novoNo->chaves[i-indiceDoMeio-1] = vetorAux[i];
+        }
+
+        if(noPossuiPai(no)){
+            insereNo(no->pai, chaveDoMeio, ordem);
+            // atualiza os filhos do pai para receber o nó partido
+            for(i=0; i<=no->pai->nChaves; i++){
+                if(no->pai->filhos[i] == no){
+                    no->pai->filhos[i] = no;
+                    no->pai->filhos[i+1] = novoNo;
+                    novoNo->pai = no->pai;
+                    break;
+                }
+            }
+        }else{
+            // se não tem pai é pq é raiz, nesse caso o tratamento é diferente
+            No* novoPai = criaNo(ordem, NULL);
+            insereNo(novoPai, chaveDoMeio, ordem);
+            // atualiza os filhos do novo pai
+            novoPai->filhos[0] = no;
+            novoPai->filhos[1] = novoNo;
+            no->pai = novoPai;
+            novoNo->pai = novoPai;
+        }
+    }
+
+}
+
+void imprimeArvore(No* no, int ordem){
     
-    
-    // se o nó estiver cheio, divide o nó 
-
-
 }
