@@ -142,6 +142,57 @@ void insereArvore(No* raiz, void* chave, int ordem) {
 
 }
 
-void imprimeArvore(No* no, int ordem){
-    
+// Esquema de remoção:
+//se não estiver, retorna a raiz
+//se estiver: 
+// 1-caso: se for folha, remove normalmente
+// 2-caso: se for no intermediario, e a quantidade de filhos dos nós adjacentes for menor que 2*ordem, pode fazer a concatenação -> juntar os dois nós e apagar o nó que ficou vazio
+// 3-caso: se for no intermediario e a quantidade de filhos maior que 2*ordem:  redistribuição -> pegar um dos filhos adjacentes e redistribuir as chaves entre os dois nós
+No* removeArvore(No* raiz, int chave){
+    //busca o nó para ver se esta na arvore 
+    No* no = buscaChave(raiz, chave);
+    if(no){
+        
+        if(no->filhos[0] == NULL){
+            // verifica se o nó é folha
+            for(int i=0; i<no->nChaves; i++){
+                if(no->chaves[i] == chave){
+                    //redistribuição dos vizinhos do nó
+                    for(int j=i; j<no->nChaves; j++){
+                        no->chaves[j] = no->chaves[j+1];
+                    }
+                    no->nChaves--;
+                    return raiz;
+                }
+            }
+        } else {
+            //se o nó não for folha ...
+        }
+
+    }else{
+        printf("Nó não encontrado na árvore!\n");
+        return NULL;
+    }
+
+}
+
+
+// Função para imprimir a árvore B em ordem de nível
+void imprimeArvore(No* raiz, int ordem) {
+
+}
+
+void liberaNo(No* no) {
+    free(no->chaves);
+    free(no->filhos);
+    free(no);
+}
+
+void liberaArvore(No* no){
+    if(no){
+        for(int i=0; i<=no->nChaves; i++){
+            liberaArvore(no->filhos[i]);
+        }
+        liberaNo(no);
+    }
 }
