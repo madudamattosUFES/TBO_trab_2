@@ -2,17 +2,45 @@
 #define ARVORE_H
 
 #include <stdlib.h>
+#include <stdbool.h>
 
-// Definição da estrutura No
+// Declaração incompleta da estrutura No
 typedef struct no No;
 
 // Função para criar um novo nó
-No* novoNo(int ordem, No* pai);
+No* criaNo(int ordem, No* pai);
 
 // Função para buscar uma chave na árvore
-No* buscaChave(No* no, void* chave);
+No* buscaChave(No* no, int chave);
 
 // Função para inserir uma chave na árvore
-void insereChave(No* raiz, void* chave);
+void insereArvore(No* raiz, int chave);
+
+// Função para verificar se um nó é folha
+bool ehNoFolha(No* no);
+
+// Função para remover uma chave da árvore
+No* removeArvore(No* raiz, int chave, int ordem);
+
+// Função para verificar se um nó contém uma chave
+bool noContemChave(No* no, int chave);
+
+// Função para verificar se um nó possui pai
+bool noPossuiPai(No* no);
+
+// Função para retornar o irmão esquerdo de um nó
+No* retornaIrmaoEsquerdo(No* no);
+
+// Função para retornar o irmão direito de um nó
+No* retornaIrmaoDireito(No* no);
+
+// Função para imprimir a árvore em largura (por nível)
+void imprimeArvoreBPorNivel(No* raiz);
+
+// Função para liberar um nó
+void liberaNo(No* no);
+
+// Função para liberar a árvore
+void liberaArvore(No* no);
 
 #endif // ARVORE_H

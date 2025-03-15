@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include "arvore.h"
 #include "item.h"
-
+#include "sort.h"
 
 struct no {
     int nChaves; // número de chaves no nó
@@ -11,13 +11,94 @@ struct no {
     int* chaves; // ptr para o array de chaves
    //void* dadosRegistro; // ptr generico para o array de struct q define chaves e outras informações necessarias (a ser usado futuramente)
     No** filhos; // ptr para o array de ponteiros para os filhos 
+    int d; // ordem da arvore
 };
+
+// Estrutura auxiliar para fila com controle de nível
+typedef struct elementoFila {
+    No* no;
+    int nivel;
+    struct elementoFila* prox;
+} ElementoFila;
+
+typedef struct {
+    ElementoFila* inicio;
+    ElementoFila* fim;
+} Fila;
+
+// Funções auxiliares de fila
+Fila* criaFila() {
+    Fila* f = malloc(sizeof(Fila));
+    f->inicio = f->fim = NULL;
+    return f;
+}
+
+void enfileira(Fila* f, No* no, int nivel) {
+    ElementoFila* novo = malloc(sizeof(ElementoFila));
+    novo->no = no;
+    novo->nivel = nivel;
+    novo->prox = NULL;
+    if (f->fim != NULL)
+        f->fim->prox = novo;
+    else
+        f->inicio = novo;
+    f->fim = novo;
+}
+
+ElementoFila* desenfileira(Fila* f) {
+    if (f->inicio == NULL) return NULL;
+    ElementoFila* removido = f->inicio;
+    f->inicio = removido->prox;
+    if (f->inicio == NULL) f->fim = NULL;
+    return removido;
+}
+
+// imprime a árvore em largura (por nível)
+void imprimeArvoreBPorNivel(No* raiz) {
+    if (!raiz) return;
+
+    Fila* fila = criaFila();
+    enfileira(fila, raiz, 0);
+    int nivelAtual = 0;
+
+    while (fila->inicio != NULL) {
+        ElementoFila* elem = desenfileira(fila);
+        No* no = elem->no;
+
+        // Se o nível mudou, pula linha
+        if (elem->nivel > nivelAtual) {
+            printf("\n");
+            nivelAtual = elem->nivel;
+        }
+
+        // Imprime chaves do nó atual
+        printf("[");
+        for (int i = 0; i < no->nChaves; i++) {
+            printf("%d", no->chaves[i]);
+            if (i < no->nChaves - 1) printf(", ");
+        }
+        printf("] ");
+
+        // Enfileira filhos não nulos
+        for (int i = 0; i <= no->nChaves; i++) {
+            if (no->filhos[i] != NULL) {
+                enfileira(fila, no->filhos[i], elem->nivel + 1);
+            }
+        }
+
+        free(elem); // libera o elemento da fila
+    }
+
+    printf("\n");
+}
+
 
 // para uma ordem d da arvore -> max 2d filhos e min d filhos
 No* criaNo(int ordem, No* pai) {
     No* novoNo = (No*) malloc(sizeof(No));
     novoNo->nChaves = 0;
     novoNo->pai = pai;
+    novoNo->d = ordem;
     novoNo->chaves = malloc(2 * ordem * sizeof(int));
     novoNo->filhos = malloc(( 2 * ordem  + 1) * sizeof(No*));
 
@@ -30,7 +111,7 @@ No* criaNo(int ordem, No* pai) {
     return novoNo;
 }
 
-No* buscaChave(No* no, void* chave) { 
+No* buscaChave(No* no, int chave) { 
     if(no){
         int i=0;
         while(i< no->nChaves && chave > no->chaves[i]) i++;
@@ -55,7 +136,7 @@ bool noCheio(No* no, int ordem) {
     return no->nChaves == ordem;
 }
 
-void insereNo(No* no, int chave, int ordem) {
+void insereNo(No* no, int chave) {
     if(no->nChaves == 0) {
         no->chaves[0] = chave;
         return;
@@ -74,7 +155,7 @@ void insereNo(No* no, int chave, int ordem) {
     return;
 }
 
-void insereArvore(No* raiz, void* chave, int ordem) {
+void insereArvore(No* raiz, int chave) {
     
     No* no = buscaChave(raiz, chave);
     
@@ -85,10 +166,11 @@ void insereArvore(No* raiz, void* chave, int ordem) {
     }
 
     // se o nó não estiver cheio, insere a chave no nó
-    if(!noCheio(no, ordem)) {
-        insereNo(no, chave, ordem);
+    if(!noCheio(no, no->d)) {
+        insereNo(no, chave);
     } else {
         // se o nó estiver cheio, divide o nó, sobe o do meio para o pai e cria outro nó
+        int ordem = no->d;
         No* novoNo = criaNo(ordem, no->pai);
         int vetorAux[ordem + 1];
         int i;
@@ -98,7 +180,7 @@ void insereArvore(No* raiz, void* chave, int ordem) {
             vetorAux[i] = no->chaves[i];
         }
         vetorAux[i+1] = chave; // insere a chave no vetor auxiliar
-        sort(vetorAux, 0, ordem); // insertion sort para ordenar o vetor auxiliar
+        insertion_sort(vetorAux, 0, ordem); // insertion sort para ordenar o vetor auxiliar
 
         int indiceDoMeio = ordem/2;
         int chaveDoMeio = vetorAux[indiceDoMeio] ;
@@ -118,7 +200,7 @@ void insereArvore(No* raiz, void* chave, int ordem) {
         }
 
         if(noPossuiPai(no)){
-            insereNo(no->pai, chaveDoMeio, ordem);
+            insereNo(no->pai, chaveDoMeio);
             // atualiza os filhos do pai para receber o nó partido
             for(i=0; i<=no->pai->nChaves; i++){
                 if(no->pai->filhos[i] == no){
@@ -131,7 +213,7 @@ void insereArvore(No* raiz, void* chave, int ordem) {
         }else{
             // se não tem pai é pq é raiz, nesse caso o tratamento é diferente
             No* novoPai = criaNo(ordem, NULL);
-            insereNo(novoPai, chaveDoMeio, ordem);
+            insereNo(novoPai, chaveDoMeio);
             // atualiza os filhos do novo pai
             novoPai->filhos[0] = no;
             novoPai->filhos[1] = novoNo;
@@ -142,47 +224,150 @@ void insereArvore(No* raiz, void* chave, int ordem) {
 
 }
 
-// Esquema de remoção:
-//se não estiver, retorna a raiz
-//se estiver: 
-// 1-caso: se for folha, remove normalmente
-// 2-caso: se for no intermediario, e a quantidade de filhos dos nós adjacentes for menor que 2*ordem, pode fazer a concatenação -> juntar os dois nós e apagar o nó que ficou vazio
-// 3-caso: se for no intermediario e a quantidade de filhos maior que 2*ordem:  redistribuição -> pegar um dos filhos adjacentes e redistribuir as chaves entre os dois nós
-No* removeArvore(No* raiz, int chave){
-    //busca o nó para ver se esta na arvore 
-    No* no = buscaChave(raiz, chave);
-    if(no){
-        
-        if(no->filhos[0] == NULL){
-            // verifica se o nó é folha
-            for(int i=0; i<no->nChaves; i++){
-                if(no->chaves[i] == chave){
-                    //redistribuição dos vizinhos do nó
-                    for(int j=i; j<no->nChaves; j++){
-                        no->chaves[j] = no->chaves[j+1];
-                    }
-                    no->nChaves--;
-                    return raiz;
-                }
+No* retornaIrmaoEsquerdo(No* no){
+    if(noPossuiPai(no)){
+        for(int i=0; i<=no->pai->nChaves; i++){
+            if(no->pai->filhos[0] == no){
+                return NULL;
             }
-        } else {
-            //se o nó não for folha ...
+            if(no->pai->filhos[i] == no){
+                return no->pai->filhos[i-1];
+            }
         }
-
-    }else{
-        printf("Nó não encontrado na árvore!\n");
-        return NULL;
     }
+    return NULL;
+}
 
+No* retornaIrmaoDireito(No* no){
+    if(noPossuiPai(no)){
+        for(int i=0; i<=no->pai->nChaves; i++){
+            if(no->pai->filhos[i] == no){
+                return no->pai->filhos[i+1];
+            }
+        }
+    }
+    return NULL;
+}
+
+bool ehNoFolha(No* no){
+    for(int i=0; i<=no->nChaves; i++){
+        if(no->filhos[i]){
+            return false;
+        }
+    }
+    return true;
 }
 
 
-// Função para imprimir a árvore B em ordem de nível
-void imprimeArvore(No* raiz, int ordem) {
+// // Caso 1 : Se o nó é folha e ficou com mais de 50% de sua capacidade -> faz nada, encerra. 
+// // Caso 2: Verifica se o nó é intermediário, troca a chave a ser removida pela chave do antecessor -> se a folha ficar com mais de 50% de sua capacidade, encerra.
+//     // se nao tiver antecessor troca pelo sucessor
+// // Caso 3: Se o nó ficar com menos de 50% de sua capacidade, redistribui as chaves entre os irmãos
+// // Caso 4: Se o nó ficar com menos de 50% de sua capacidade e não puder redistribuir entre irmaos, concatena         
+// No* removeArvore(No* raiz, int chave, int ordem){
+//     int j=0, i=0;
+//     //busca o nó para ver se esta na arvore 
+//     No* no = buscaChave(raiz, chave);
+//     if(no){
+//         No* irmaoEsquerdo = retornaIrmaoEsquerdo(no);
+//         No* irmaoDireito = retornaIrmaoDireito(no);
+        
+//         int indiceChave = -1;
+//         for(i=0; i<no->nChaves; i++){
+//             if(no->chaves[i] == chave){
+//                 indiceChave = i;
+//                 break;
+//             }
+//         }
 
-}
+//         // Remove e ve em qual dos casos caiu
+//         if(ehNoFolha(no)){
+//             for(i=0; i<no->nChaves; i++){
+//                 if(no->chaves[i] == chave){
+//                     for(j=i; j<no->nChaves; j++){
+//                         no->chaves[j] = no->chaves[j+1];
+//                     }
+//                     no->chaves[j] = -1;
+//                     no->nChaves--;
+//                     break;
+//                 }
+//             }
+            
+//             // se o nó ficar com menos de 50% de sua capacidade, redistribui as chaves entre os irmãos
+//             if(no->nChaves < no->d){
+//                 // se tiver irmão a esquerda
+//                 if(irmaoEsquerdo){
+//                     if(irmaoEsquerdo->nChaves > no->d){
+//                         // redistribui as chaves
+//                         no->chaves[0] = irmaoEsquerdo->chaves[irmaoEsquerdo->nChaves-1];
+//                         irmaoEsquerdo->chaves[irmaoEsquerdo->nChaves-1] = -1;
+//                         irmaoEsquerdo->nChaves--;
+//                         no->nChaves++;
+//                     }else{
+//                         // concatena os nós
+//                         for(i=0; i<no->nChaves; i++){
+//                             irmaoEsquerdo->chaves[irmaoEsquerdo->nChaves] = no->chaves[i];
+//                             irmaoEsquerdo->nChaves++;
+//                         }
+//                         liberaNo(no);
+//                     }
+//                 }else if(irmaoDireito){
+//                     if(irmaoDireito->nChaves > no->d){
+//                         // redistribui as chaves
+//                         no->chaves[no->nChaves] = irmaoDireito->chaves[0];
+//                         irmaoDireito->chaves[0] = -1;
+//                         irmaoDireito->nChaves--;
+//                         no->nChaves++;
+//                     }else{
+//                         // concatena os nós
+//                         for(i=0; i<irmaoDireito->nChaves; i++){
+//                             no->chaves[no->nChaves] = irmaoDireito->chaves[i];
+//                             no->nChaves++;
+//                         }
+//                         liberaNo(irmaoDireito);
+//                     }
+//                 }
+//             }
+//             if(no->nChaves < no->d){
+                
+                
+//             }
+
+//             for(i=0; i<no->nChaves; i++){
+//                 if(no->chaves[i] == chave){
+//                     for(j=i; j<no->nChaves; j++){
+//                         no->chaves[j] = no->chaves[j+1];
+//                     }
+//                     no->chaves[j] = -1;
+//                     no->nChaves--;
+//                     break;
+//                 }
+//             }
+
+//         } else if(no == raiz){
+//             // é um nó raiz 
+//         } else {
+//             // é nó intermediário
+//             // busca o nó imediatamente anterior para substituir
+//             No* noAnterior = no->filhos[no->nChaves];
+//             while(noAnterior->filhos[0]){
+//                 noAnterior = noAnterior->filhos[noAnterior->nChaves];
+//             }
+//             int chaveAnterior = noAnterior->chaves[noAnterior->nChaves-1];
+//             no->chaves[i] = chaveAnterior;
+
+//         }
+
+//     }else{
+//         printf("Nó não encontrado na árvore!\n");
+//         return NULL;
+//     }
+
+// }
+
 
 void liberaNo(No* no) {
+    if(!no) return;
     free(no->chaves);
     free(no->filhos);
     free(no);
