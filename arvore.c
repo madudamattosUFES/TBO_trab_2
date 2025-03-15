@@ -4,6 +4,7 @@
 #include "arvore.h"
 #include "item.h"
 #include "sort.h"
+#include "fila.h"
 
 struct no {
     int nChaves; // número de chaves no nó
@@ -13,84 +14,6 @@ struct no {
     No** filhos; // ptr para o array de ponteiros para os filhos 
     int d; // ordem da arvore
 };
-
-// Estrutura auxiliar para fila com controle de nível
-typedef struct elementoFila {
-    No* no;
-    int nivel;
-    struct elementoFila* prox;
-} ElementoFila;
-
-typedef struct {
-    ElementoFila* inicio;
-    ElementoFila* fim;
-} Fila;
-
-// Funções auxiliares de fila
-Fila* criaFila() {
-    Fila* f = malloc(sizeof(Fila));
-    f->inicio = f->fim = NULL;
-    return f;
-}
-
-void enfileira(Fila* f, No* no, int nivel) {
-    ElementoFila* novo = malloc(sizeof(ElementoFila));
-    novo->no = no;
-    novo->nivel = nivel;
-    novo->prox = NULL;
-    if (f->fim != NULL)
-        f->fim->prox = novo;
-    else
-        f->inicio = novo;
-    f->fim = novo;
-}
-
-ElementoFila* desenfileira(Fila* f) {
-    if (f->inicio == NULL) return NULL;
-    ElementoFila* removido = f->inicio;
-    f->inicio = removido->prox;
-    if (f->inicio == NULL) f->fim = NULL;
-    return removido;
-}
-
-// imprime a árvore em largura (por nível)
-void imprimeArvoreBPorNivel(No* raiz) {
-    if (!raiz) return;
-
-    Fila* fila = criaFila();
-    enfileira(fila, raiz, 0);
-    int nivelAtual = 0;
-
-    while (fila->inicio != NULL) {
-        ElementoFila* elem = desenfileira(fila);
-        No* no = elem->no;
-
-        // Se o nível mudou, pula linha
-        if (elem->nivel > nivelAtual) {
-            printf("\n");
-            nivelAtual = elem->nivel;
-        }
-
-        // Imprime chaves do nó atual
-        printf("[");
-        for (int i = 0; i < no->nChaves; i++) {
-            printf("%d", no->chaves[i]);
-            if (i < no->nChaves - 1) printf(", ");
-        }
-        printf("] ");
-
-        // Enfileira filhos não nulos
-        for (int i = 0; i <= no->nChaves; i++) {
-            if (no->filhos[i] != NULL) {
-                enfileira(fila, no->filhos[i], elem->nivel + 1);
-            }
-        }
-
-        free(elem); // libera o elemento da fila
-    }
-
-    printf("\n");
-}
 
 
 // para uma ordem d da arvore -> max 2d filhos e min d filhos
@@ -111,6 +34,7 @@ No* criaNo(int ordem, No* pai) {
     return novoNo;
 }
 
+
 No* buscaChave(No* no, int chave) { 
     if(no){
         int i=0;
@@ -121,6 +45,7 @@ No* buscaChave(No* no, int chave) {
     } else return NULL;
 }
 
+
 bool noContemChave(No* no, int chave) {
     for(int i = 0; i < no->nChaves; i++) {
         if(no->chaves[i] == chave) return true;
@@ -128,13 +53,16 @@ bool noContemChave(No* no, int chave) {
     return false;
 }
 
+
 bool noPossuiPai(No* no) {
     return no->pai != NULL;
 }
 
+
 bool noCheio(No* no, int ordem) {
     return no->nChaves == ordem;
 }
+
 
 void insereNo(No* no, int chave) {
     if(no->nChaves == 0) {
@@ -155,19 +83,21 @@ void insereNo(No* no, int chave) {
     return;
 }
 
-void insereArvore(No* raiz, int chave) {
+
+No* insereArvore(No* raiz, int chave) {
     
     No* no = buscaChave(raiz, chave);
     
     // se o no ja estiver na arvore, nao insere
     if(noContemChave(no, chave)){
         printf("Chave já inserida na árvore!\n");
-        return;
+        return raiz;
     }
 
     // se o nó não estiver cheio, insere a chave no nó
     if(!noCheio(no, no->d)) {
         insereNo(no, chave);
+        return raiz;
     } else {
         // se o nó estiver cheio, divide o nó, sobe o do meio para o pai e cria outro nó
         int ordem = no->d;
@@ -207,9 +137,11 @@ void insereArvore(No* raiz, int chave) {
                     no->pai->filhos[i] = no;
                     no->pai->filhos[i+1] = novoNo;
                     novoNo->pai = no->pai;
+                    return raiz;
                     break;
                 }
             }
+            
         }else{
             // se não tem pai é pq é raiz, nesse caso o tratamento é diferente
             No* novoPai = criaNo(ordem, NULL);
@@ -219,10 +151,12 @@ void insereArvore(No* raiz, int chave) {
             novoPai->filhos[1] = novoNo;
             no->pai = novoPai;
             novoNo->pai = novoPai;
+            return novoPai;
         }
     }
-
+    return raiz;
 }
+
 
 No* retornaIrmaoEsquerdo(No* no){
     if(noPossuiPai(no)){
@@ -238,6 +172,7 @@ No* retornaIrmaoEsquerdo(No* no){
     return NULL;
 }
 
+
 No* retornaIrmaoDireito(No* no){
     if(noPossuiPai(no)){
         for(int i=0; i<=no->pai->nChaves; i++){
@@ -248,6 +183,7 @@ No* retornaIrmaoDireito(No* no){
     }
     return NULL;
 }
+
 
 bool ehNoFolha(No* no){
     for(int i=0; i<=no->nChaves; i++){
@@ -372,6 +308,7 @@ void liberaNo(No* no) {
     free(no->filhos);
     free(no);
 }
+
 
 void liberaArvore(No* no){
     if(no){
