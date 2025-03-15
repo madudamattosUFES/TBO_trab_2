@@ -1,7 +1,19 @@
 #ifndef FILA_H
 #define FILA_H
 
+
+typedef struct celula Celula;
 typedef struct fila Fila;
+
+struct celula {
+    void* dado;
+    Celula* prox;
+};
+
+struct fila {
+    Celula* ini;
+    Celula* fim;
+};
 
 // Cria uma fila vazia
 Fila* criaFila();

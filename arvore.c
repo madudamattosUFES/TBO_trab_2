@@ -38,7 +38,7 @@ No* criaNo(int ordem, No* pai) {
 No* buscaChave(No* no, int chave) { 
     if(no){
         int i=0;
-        while(i< no->nChaves && chave > no->chaves[i]) i++;
+        while(i < no->nChaves && chave > no->chaves[i]) i++;
         if(i < no->nChaves && chave == no->chaves[i]) return no; // encontrou chave
         else if(no->filhos[i]) return buscaChave(no->filhos[i], chave); // busca nos filhos
         else return no; // buscou até o nó folha e não encontrou, retorna o nó onde a chave deveria estar
@@ -84,20 +84,19 @@ void insereNo(No* no, int chave) {
 }
 
 
-No* insereArvore(No* raiz, int chave) {
+void insereArvore(No* raiz, int chave) {
     
     No* no = buscaChave(raiz, chave);
     
     // se o no ja estiver na arvore, nao insere
     if(noContemChave(no, chave)){
         printf("Chave já inserida na árvore!\n");
-        return raiz;
+        return;
     }
 
     // se o nó não estiver cheio, insere a chave no nó
     if(!noCheio(no, no->d)) {
         insereNo(no, chave);
-        return raiz;
     } else {
         // se o nó estiver cheio, divide o nó, sobe o do meio para o pai e cria outro nó
         int ordem = no->d;
@@ -137,7 +136,6 @@ No* insereArvore(No* raiz, int chave) {
                     no->pai->filhos[i] = no;
                     no->pai->filhos[i+1] = novoNo;
                     novoNo->pai = no->pai;
-                    return raiz;
                     break;
                 }
             }
@@ -151,10 +149,9 @@ No* insereArvore(No* raiz, int chave) {
             novoPai->filhos[1] = novoNo;
             no->pai = novoPai;
             novoNo->pai = novoPai;
-            return novoPai;
+            raiz = novoPai;
         }
     }
-    return raiz;
 }
 
 
@@ -300,6 +297,54 @@ bool ehNoFolha(No* no){
 //     }
 
 // }
+
+
+void imprimeArvore(No* raiz) {
+    if (raiz == NULL) return;
+
+    Fila* fila = criaFila();
+    insereFila(fila, raiz);
+
+    while (!ehVaziaFila(fila)) {
+        int nivelTamanho = 0;
+        Fila* filaNivel = criaFila();
+
+        // Conta o número de nós no nível atual
+        Celula* atual = fila->ini;
+        while (atual) {
+            nivelTamanho++;
+            atual = atual->prox;
+        }
+
+        // Processa todos os nós no nível atual
+        while (nivelTamanho > 0) {
+            No* noAtual = (No*) retiraFila(fila);
+
+            // Imprime todas as chaves do nó atual
+            printf("[");
+            for (int i = 0; i < noAtual->nChaves; i++) {
+                printf("key: %d, ", noAtual->chaves[i]);
+            }
+            printf("]");
+
+            // Adiciona todos os filhos do nó atual à fila do próximo nível
+            for (int i = 0; i <= noAtual->nChaves; i++) {
+                if (noAtual->filhos[i] != NULL) {
+                    insereFila(filaNivel, noAtual->filhos[i]);
+                }
+            }
+
+            nivelTamanho--;
+        }
+        printf("\n"); // Nova linha após cada nível
+
+        // Troca a fila atual pela fila do próximo nível
+        destroiFila(fila);
+        fila = filaNivel;
+    }
+
+    destroiFila(fila);
+}
 
 
 void liberaNo(No* no) {

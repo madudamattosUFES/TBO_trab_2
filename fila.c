@@ -2,15 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct celula {
-    void* dado;
-    Celula* prox;
-}Celula;
-
-struct fila {
-    Celula* ini;
-    Celula* fim;
-};
 
 Fila* criaFila() {
     Fila* f = (Fila*) malloc(sizeof(Fila));

@@ -35,7 +35,7 @@ No* retornaIrmaoEsquerdo(No* no);
 No* retornaIrmaoDireito(No* no);
 
 // Função para imprimir a árvore em largura (por nível)
-void imprimeArvoreBPorNivel(No* raiz);
+void imprimeArvore(No* raiz);
 
 // Função para liberar um nó
 void liberaNo(No* no);

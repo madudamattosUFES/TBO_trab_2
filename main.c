@@ -9,19 +9,18 @@
 int main(){
     No* raiz = criaNo(4, NULL);
 
-    raiz = insereArvore(raiz, 20);
-    raiz = insereArvore(raiz, 75);
-    raiz = insereArvore(raiz, 77);
-    raiz = insereArvore(raiz, 78);
-    raiz = insereArvore(raiz, 55);
-    raiz = insereArvore(raiz, 62);
-    raiz = insereArvore(raiz, 51);
-    raiz = insereArvore(raiz, 40);
-    raiz = insereArvore(raiz, 60);
-    raiz = insereArvore(raiz, 45);
+    insereArvore(raiz, 20);
+    insereArvore(raiz, 75);
+    insereArvore(raiz, 77);
+    insereArvore(raiz, 78);
+    insereArvore(raiz, 55);
+    insereArvore(raiz, 62);
+    insereArvore(raiz, 51);
+    insereArvore(raiz, 40);
+    insereArvore(raiz, 60);
+    insereArvore(raiz, 45);
 
-    imprimeArvoreBPorNivel(raiz);
-
+    imprimeArvore(raiz);
 
     return 0;
 }
