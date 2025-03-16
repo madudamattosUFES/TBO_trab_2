@@ -89,25 +89,87 @@ No* insereNo(No* no, int chave) {
         vetorAux[i+1] = chave; // insere a chave no vetor auxiliar
         insertion_sort(vetorAux, 0, ordem); // insertion sort para ordenar o vetor auxiliar
 
-        int chaveDoMeio = vetorAux[meio] ;
+        int chaveDoMeio = vetorAux[meio];
+        
+        // -------------------------------------------------
 
-        // Atualiza o novo nó com a segunda metade das chaves
-        for (i = meio + 1; i < ordem; i++) {
-            novoNo->chaves[i - (meio + 1)] = vetorAux[i];
+        if(chave == chaveDoMeio){
+            // Atualiza o novo nó com a segunda metade das chaves
+            for (i = meio + 1; i <= ordem; i++) {
+                novoNo->chaves[i - (meio + 1)] = vetorAux[i];
+                novoNo->filhos[i - (meio + 1)] = no->filhos[i];
+                if (novoNo->filhos[i - (meio + 1)] != NULL) {
+                    novoNo->filhos[i - (meio + 1)]->pai = novoNo;
+                }
+            }
             novoNo->filhos[i - (meio + 1)] = no->filhos[i];
-            if (novoNo->filhos[i - (meio + 1)] != NULL) {
+            if (novoNo->filhos[i - (meio + 1)]) {
                 novoNo->filhos[i - (meio + 1)]->pai = novoNo;
             }
+
+            // Atualiza a qtd de chaves 
+            novoNo->nChaves =  meio;
+            no->nChaves = meio -1;
+
         }
-        novoNo->filhos[i - (meio + 1)] = no->filhos[i];
-        if (novoNo->filhos[i - (meio + 1)]) {
-            novoNo->filhos[i - (meio + 1)]->pai = novoNo;
+        else if(chave < chaveDoMeio){
+            // a chave nova vai entrar no nó atual e a chave que sobe vai ser vetorAux[meio-1]
+            for(int i=0; i<meio; i++){
+                if(no->chaves[i] == vetorAux[i]){
+                    continue;
+                }
+                vetorAux[i] = no->chaves[i];
+                if(no->filhos[i]){
+                    no->filhos[i] = no->filhos[i+1];
+                }
+            }
+            // Atualiza o novo nó com a segunda metade das chaves
+            for (i = meio + 1; i <= ordem; i++) {
+                novoNo->chaves[i - (meio + 1)] = vetorAux[i];
+                novoNo->filhos[i - (meio + 1)] = no->filhos[i];
+                if (novoNo->filhos[i - (meio + 1)] != NULL) {
+                    novoNo->filhos[i - (meio + 1)]->pai = novoNo;
+                }
+            }
+            novoNo->filhos[i - (meio + 1)] = no->filhos[i];
+            if (novoNo->filhos[i - (meio + 1)]) {
+                novoNo->filhos[i - (meio + 1)]->pai = novoNo;
+            }
+
+            // Atualiza a qtd de chaves 
+            novoNo->nChaves =  meio -1;
+            no->nChaves = meio;
+        } 
+        else {
+            // a chave nova vai entrar no novo nó e a chave que sobe vai ser vetorAux[meio+1] 
+            // Atualiza o novo nó com a segunda metade das chaves de vetorAux e insere a chave na posição correta, ajustando a posição dos filhos se necessário 
+            for (i = meio + 1; i <=  ordem; i++) {
+                novoNo->chaves[i - (meio + 1)] = vetorAux[i];
+                novoNo->filhos[i - (meio + 1)] = no->filhos[i];
+                novoNo->filhos[i - (meio + 1)] = no->filhos[i];
+                if (novoNo->filhos[i - (meio + 1)] != NULL) {
+                    novoNo->filhos[i - (meio + 1)]->pai = novoNo;
+                }
+
+                // if(vetorAux[i] >= chave){
+                //     novoNo->filhos[i-(meio+1) + 1] = no->filhos[i];
+                //     if(novoNo->filhos[i-(meio+1) + 1]){
+                //         novoNo->filhos[i-(meio+1) + 1]->pai = novoNo;
+                //     }
+                // }
+            }
+            novoNo->filhos[i - (meio + 1)] = no->filhos[i];
+            if (novoNo->filhos[i - (meio + 1)]) {
+                novoNo->filhos[i - (meio + 1)]->pai = novoNo;
+            }
+
+            // Atualiza a qtd de chaves 
+            novoNo->nChaves =  meio;
+            no->nChaves = meio - 1; // nao mudar isso ! 
         }
 
+        // -------------------------------------------------
 
-        // Atualiza a qtd de chaves 
-        novoNo->nChaves = ordem - meio - 1;
-        no->nChaves = meio;
 
         // Se o nó possui pai, insere a chave do meio no pai
         if (no->pai) {

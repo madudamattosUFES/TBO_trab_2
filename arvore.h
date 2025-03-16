@@ -7,6 +7,11 @@
 // Declaração incompleta da estrutura No
 typedef struct no No;
 
+typedef struct ArvoreB {
+    No* raiz;
+    int ordem;
+} ArvoreB;
+
 // Função para criar um novo nó
 No* criaNo(int ordem, No* pai);
 
@@ -43,5 +48,11 @@ void liberaArvore(No* no);
 void insereArvore(No** raiz, int chave);
 
 No* insereNo(No* no, int chave);
+
+void inserirNaoCheio(No* x, int k) ;
+
+void splitFilho(No* x, int i, No* y) ;
+
+void inserir(ArvoreB* T, int k) ;
 
 #endif // ARVORE_H
