@@ -80,11 +80,20 @@ No* insereNo(No* no, int chave) {
     if (no->nChaves == ordem) {
         No* novoNo = criaNo(ordem, no->pai);
         int meio = ordem / 2;
-        int chaveDoMeio = no->chaves[meio];
+
+        // maracutaia para descobrir a chave de valor intermediario que vai subir
+        int vetorAux[ordem + 1];
+        for(int i=0; i<= ordem; i++){
+            vetorAux[i] = no->chaves[i];
+        }
+        vetorAux[i+1] = chave; // insere a chave no vetor auxiliar
+        insertion_sort(vetorAux, 0, ordem); // insertion sort para ordenar o vetor auxiliar
+
+        int chaveDoMeio = vetorAux[meio] ;
 
         // Atualiza o novo nó com a segunda metade das chaves
         for (i = meio + 1; i < ordem; i++) {
-            novoNo->chaves[i - (meio + 1)] = no->chaves[i];
+            novoNo->chaves[i - (meio + 1)] = vetorAux[i];
             novoNo->filhos[i - (meio + 1)] = no->filhos[i];
             if (novoNo->filhos[i - (meio + 1)] != NULL) {
                 novoNo->filhos[i - (meio + 1)]->pai = novoNo;
@@ -94,6 +103,7 @@ No* insereNo(No* no, int chave) {
         if (novoNo->filhos[i - (meio + 1)]) {
             novoNo->filhos[i - (meio + 1)]->pai = novoNo;
         }
+
 
         // Atualiza a qtd de chaves 
         novoNo->nChaves = ordem - meio - 1;
