@@ -13,9 +13,6 @@ No* criaNo(int ordem, No* pai);
 // Função para buscar uma chave na árvore
 No* buscaChave(No* no, int chave);
 
-// Função para inserir uma chave na árvore
-void insereArvore(No* raiz, int chave);
-
 // Função para verificar se um nó é folha
 bool ehNoFolha(No* no);
 
@@ -42,5 +39,9 @@ void liberaNo(No* no);
 
 // Função para liberar a árvore
 void liberaArvore(No* no);
+
+void insereArvore(No** raiz, int chave);
+
+No* insereNo(No* no, int chave);
 
 #endif // ARVORE_H
